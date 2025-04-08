@@ -35,16 +35,19 @@ cluster_data = scaler.transform(df[cluster_features])
 kmeans = KMeans(n_clusters=4, random_state=42)
 df['cluster'] = kmeans.fit_predict(cluster_data)
 
-# Label clusters based on mean weekly score
+# Assign labels based on centroids and feature analysis
+centroids = scaler.inverse_transform(kmeans.cluster_centers_)
+cluster_df = pd.DataFrame(centroids, columns=cluster_features)
+cluster_df['cluster'] = range(4)
+
+# Sort by average_weekly_score and assign meaningful labels
 cluster_labels = {
-    0: "Top Performers",
-    1: "Stable Performers",
-    2: "At Risk",
-    3: "Low Engagement"
+    cluster_df['average_weekly_score'].idxmax(): "Top Performers",
+    cluster_df['average_weekly_score'].idxmin(): "At Risk",
+    cluster_df['average_engagement_score'].idxmin(): "Low Engagement",
 }
-cluster_means = df.groupby('cluster')['average_weekly_score'].mean().sort_values(ascending=False)
-sorted_clusters = cluster_means.index.tolist()
-cluster_labels = {sorted_clusters[i]: label for i, label in enumerate(["Top Performers", "Stable Performers", "Low Engagement", "At Risk"])}
+remaining = set(range(4)) - set(cluster_labels.keys())
+cluster_labels[list(remaining)[0]] = "Stable Performers"  # Assign remaining as Stable
 df['cluster_label'] = df['cluster'].map(cluster_labels)
 
 # Save models and metrics
@@ -55,4 +58,5 @@ with open('model_metrics.txt', 'w') as f:
 df.to_csv('processed_data_with_clusters.csv', index=False)
 
 print(f"Model training complete!\nRMSE: {rmse:.2f}\nMAE: {mae:.2f}\nR²: {r2:.2f}")
+print("Cluster Centroids:\n", cluster_df)
 print("Cluster Labels:", cluster_labels)

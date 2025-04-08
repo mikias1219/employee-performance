@@ -17,16 +17,13 @@ def generate_recommendation(row):
 
 df['recommendation'] = df.apply(generate_recommendation, axis=1)
 
-# Fake email function
-def send_email(to_email, subject, body):
-    print(f"Simulated Email:\nTo: {to_email}\nSubject: {subject}\nBody: {body}\n")
+# Fake email function with score-based logic
+def send_email(to_email, subject, body, score):
+    message = f"{body}\nAverage Weekly Score: {score:.2f}"
+    print(f"Simulated Email:\nTo: {to_email}\nSubject: {subject}\nBody: {message}\n")
     return True
-
-# Simulate alerts for all quarters
-for idx, row in df[df['recommendation'].str.contains("Alert")].iterrows():
-    send_email("manager@example.com", "Performance Alert", row['recommendation'])
 
 # Save updated data
 df.to_csv('final_data.csv', index=False)
 
-print("Automation complete (all quarters simulated)!")
+print("Automation data prepared!")
